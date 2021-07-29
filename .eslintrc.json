@@ -1,0 +1,18 @@
+{
+  "root": true,
+  "extends": [
+    "airbnb-typescript",
+    "plugin:react-hooks/recommended",
+    "plugin:jest/recommended",
+    "prettier"
+  ],
+  "plugins": ["jest"],
+  "parserOptions": {
+    "project": "./tsconfig.json"
+  },
+  "ignorePatterns": ["babel.config.js", "metro.config.js", "jest.config.js"],
+  "rules": {
+    "no-console": ["error", { "allow": ["error"] }],
+    "react/prop-types": "off"
+  }
+}
