@@ -4,7 +4,6 @@ import {
   Box,
   Center,
   Divider,
-  Flex,
   HStack,
   IBoxProps,
   ScrollView,
@@ -12,6 +11,7 @@ import {
   useBreakpointValue,
   VStack,
 } from 'native-base';
+import { useWindowDimensions } from 'react-native';
 import React, { FC, PropsWithChildren } from 'react';
 import { IHStackProps } from 'native-base/lib/typescript/components/primitives/Stack/HStack';
 import Icon from './Icon';
@@ -126,10 +126,10 @@ const LayoutFocusStackItem: <T extends ParamListBase, S extends keyof T>(
     base: 200,
     md: 300,
   });
-
+  const { height } = useWindowDimensions();
   return (
-    <ScrollView>
-      <VStack bg={bgColor}>
+    <ScrollView flex={1}>
+      <VStack minHeight={height} bg={bgColor}>
         <Box minH={STACK_HEADER_HEGIHT}>
           <VStack flex={1}>
             <HStack alignItems="center">
@@ -170,7 +170,7 @@ const LayoutFocusStackItem: <T extends ParamListBase, S extends keyof T>(
             )}
           </VStack>
         </Box>
-        <Box bg="light.100" borderTopRadius={30} px={4} pt={5} pb={2}>
+        <Box bg="light.100" flex={1} borderTopRadius={30} px={4} pt={5} pb={2}>
           {children}
         </Box>
       </VStack>
@@ -226,40 +226,51 @@ const LayoutTabDefault: <T extends ParamListBase, S extends keyof T>(
   mat = false,
   bgColor = 'transparent',
   children,
-}) => (
-  <ScrollView
-    contentContainerStyle={{}}
-    bg={mat ? bgColor : undefined}
-    px={2}
-    pb={2}
-  >
-    <Flex
-      alignContent="center"
-      alignItems="center"
-      direction="row"
-      minHeight={150}
-      padding={5}
-      bg={
-        mat
-          ? bgColor
-          : {
-              linearGradient: {
-                colors: [bgColor, 'transparent'],
-                start: [0, 0],
-                end: [0, 1],
-              },
-            }
-      }
+}) => {
+  const { height } = useWindowDimensions();
+
+  return (
+    <ScrollView
+      contentContainerStyle={{}}
+      bg={mat ? bgColor : undefined}
+      px={2}
+      pb={2}
     >
-      <Center flex={1}>
-        <Text color={color} fontSize="4xl" fontWeight="light" bg="transparent">
-          {name}
-        </Text>
-      </Center>
-    </Flex>
-    <Box flex={1}>{children}</Box>
-  </ScrollView>
-);
+      <VStack minHeight={height}>
+        <HStack
+          alignContent="center"
+          alignItems="center"
+          direction="row"
+          minHeight={150}
+          padding={5}
+          bg={
+            mat
+              ? bgColor
+              : {
+                  linearGradient: {
+                    colors: [bgColor, 'transparent'],
+                    start: [0, 0],
+                    end: [0, 1],
+                  },
+                }
+          }
+        >
+          <Center flex={1}>
+            <Text
+              color={color}
+              fontSize="4xl"
+              fontWeight="light"
+              bg="transparent"
+            >
+              {name}
+            </Text>
+          </Center>
+        </HStack>
+        <Box flex={1}>{children}</Box>
+      </VStack>
+    </ScrollView>
+  );
+};
 
 export default {
   BigLabel,

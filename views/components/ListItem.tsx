@@ -13,12 +13,8 @@ import { TouchableNativeFeedback } from 'react-native';
 import iconsNames from '../iconsNames';
 import Icon from './Icon';
 import { Dimension } from './types';
+import { listItem } from './vars';
 
-const BASE_SIDE = 60;
-const BASE_COLOR = 'primary.500';
-const BASE_IMAGE_BG = 'light.20';
-const BASE_BG_COLOR = 'light.100';
-const BASE_BG_BG_COLOR = 'red.100';
 const getIconDimension = (size: number) => ({
   wrapperSize: size * 0.9,
   iconSize: size * 0.55,
@@ -77,11 +73,11 @@ interface LargeListItemProps extends OnlyContentEditable {}
 const ListItemBackground: FC<BackgroundActionProps> = ({
   actions,
   onClose,
-  backgroundColor = BASE_BG_BG_COLOR,
+  backgroundColor = listItem.BASE_BG_BG_COLOR,
   dimension,
-  actionsColor = BASE_BG_COLOR,
+  actionsColor = listItem.BASE_BG_COLOR,
 }) => {
-  const iconSize = getIconDimension(dimension?.height || BASE_SIDE);
+  const iconSize = getIconDimension(dimension?.height || listItem.BASE_SIDE);
   return (
     <HStack justifyContent="space-between" bg={backgroundColor} flex={1}>
       <Center
@@ -147,8 +143,8 @@ const ListItem: FC<ListItemProps> = ({
   dimension = {
     minHeight: 90,
   },
-  imageColor = BASE_COLOR,
-  imageBg = BASE_IMAGE_BG,
+  imageColor = listItem.BASE_COLOR,
+  imageBg = listItem.BASE_IMAGE_BG,
   longPressBackgroundProps,
   onPress,
 }) => {
@@ -160,7 +156,7 @@ const ListItem: FC<ListItemProps> = ({
   ];
   const imageTokenColor = useToken('colors', imageColor);
   const [showBackground, setShowBackground] = useState(false);
-  const iconSize = getIconDimension(dimension.height || BASE_SIDE);
+  const iconSize = getIconDimension(dimension.height || listItem.BASE_SIDE);
   const foreGround = (
     <HStack p={2} flex={1} alignItems="center" space={1}>
       {hasImage && (

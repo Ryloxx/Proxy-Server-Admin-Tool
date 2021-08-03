@@ -1,4 +1,4 @@
-import { Box, Button, Divider, Switch, VStack } from 'native-base';
+import { Box, Button, Center, Divider, Switch, VStack } from 'native-base';
 import React, { FC, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import appState from '../../../classes';
@@ -62,8 +62,10 @@ const Settings: FC<
   ];
 
   return (
-    <Box>
-      <VStack divider={<Divider />}>{items}</VStack>
+    <VStack>
+      <VStack flex={1} divider={<Divider />}>
+        {items}
+      </VStack>
       <Divider />
       <Button
         onPress={() => {
@@ -83,7 +85,9 @@ const Settings: FC<
         >
           Update
         </Button>
-        <Error.ErrorText>{error}</Error.ErrorText>
+        <Center>
+          <Error.ErrorText>{error}</Error.ErrorText>
+        </Center>
       </Box>
       <Modal.ConfirmationModal
         dangerouse
@@ -105,7 +109,7 @@ const Settings: FC<
           dispatch(actions.updateSettings({ ...settings, apiUrl: text }));
         }}
       />
-    </Box>
+    </VStack>
   );
 };
 

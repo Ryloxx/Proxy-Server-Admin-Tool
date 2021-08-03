@@ -10,6 +10,7 @@ import { TabsNavigationRouteProps } from '../../type';
 import { TabsParamList } from '../type';
 import ReportListView from './ReportListView';
 import ReportView from './ReportView';
+import ScheduledTaskListSettings from './ScheduledTaskListSettings';
 import SideInfo from './SideInfo';
 import TaskListDetailsView from './TaskListDetailsView';
 import TaskListsView from './TaskListView';
@@ -102,6 +103,25 @@ const Home: FC<TabsNavigationRouteProps<TabsParamList, 'Home'>> = () => (
             <TaskMaker navigation={navigation} route={route} />
           </Layout.LayoutFocusStackItem>
         )}
+      </HomeStack.Screen>
+      <HomeStack.Screen name="ScheduleTaskList">
+        {({ navigation, route }) => {
+          const color = 'light.100';
+          return (
+            <Layout.LayoutFocusStackItem
+              name="Schedule Settings"
+              navigation={navigation}
+              route={route}
+              bgColor="red.100"
+              color={color}
+            >
+              <ScheduledTaskListSettings
+                navigation={navigation}
+                route={route}
+              />
+            </Layout.LayoutFocusStackItem>
+          );
+        }}
       </HomeStack.Screen>
     </HomeStack.Navigator>
   </Box>

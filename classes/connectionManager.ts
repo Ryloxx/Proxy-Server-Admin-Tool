@@ -54,7 +54,11 @@ export default class ConnectionManager {
   }
 
   private static async handleResponse(response: Response) {
-    const json = await response.json();
+    const json = await response.json().catch(() => {
+      throw new Error(
+        'Server returned invalid response, are you sure you properly configured the api url?'
+      );
+    });
     if (!response.ok) {
       if (json.error) {
         throw new Error(json.error);

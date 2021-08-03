@@ -1,5 +1,6 @@
 /* eslint-disable import/no-unresolved */
-import BackgroundJob from 'react-native-background-job';
+import * as BackgroundFetch from 'expo-background-fetch';
+import * as TaskManager from 'expo-task-manager';
 import watch from 'redux-watch';
 import { AppRegistry } from 'react-native';
 import { actions } from './store/stateReducer';
@@ -11,34 +12,30 @@ import store from './store';
 import appState from './classes';
 import API from './classes/api';
 import { BackgroundJobType } from './classes/types';
+import { registerBackgroundFetchAsync } from './utils';
 
-const job = async () => {
-  const { withState } = await appState;
-  await withState(
-    async (state) =>
-      API.executeScheduledTask(state)
-        .then((ste) => ste)
-        .catch(() => state),
-    `background-job/${BackgroundJobType.TASKLIST}`
-  );
-};
-const backgroundJob = {
-  jobKey: BackgroundJobType.TASKLIST,
-  job,
-};
-BackgroundJob.register(backgroundJob);
+TaskManager.defineTask(BackgroundJobType.TASKLIST, async () => {
+  try {
+    const { withState } = await appState;
+    await withState(
+      async (state) =>
+        API.executeScheduledTask(state)
+          .then((ste) => ste)
+          .catch(() => state),
+      `background-job/${BackgroundJobType.TASKLIST}`
+    );
+  } catch (err) {
+    console.error(
+      'Error occuring while running scheduled tasklist',
+      err.message
+    );
+  } finally {
+    await registerBackgroundFetchAsync(BackgroundJobType.TASKLIST);
+  }
+  return BackgroundFetch.Result.NewData;
+});
 
-const backgroundSchedule = {
-  jobKey: BackgroundJobType.TASKLIST,
-  period: 1000 * 60 * 15,
-  allowExecutionInForeground: true,
-  allowWhileIdle: true,
-  networkType: 1,
-};
-BackgroundJob.schedule(backgroundSchedule).catch((err) =>
-  console.error('error scheduleded task list', err.message)
-);
-
+registerBackgroundFetchAsync(BackgroundJobType.TASKLIST);
 appState.then(({ getState, saveState, onStateSaved }) => {
   const initiator = 'redux/state';
   store.dispatch(actions.setState(getState()));

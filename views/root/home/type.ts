@@ -6,4 +6,5 @@ export type HomeParamList = {
   Report: { reportData: Report };
   'Report List': { id: string };
   'Task Maker': { id: string };
+  ScheduleTaskList: { id: string };
 };

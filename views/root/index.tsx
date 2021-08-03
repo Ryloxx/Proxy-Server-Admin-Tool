@@ -3,7 +3,6 @@ import { useToken } from 'native-base';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { TabsParamList } from './type';
 import Home from './home';
-import Schedule from './schedule';
 import SettingsView from './settings';
 import User from './User';
 import Icon from '../components/Icon';
@@ -17,7 +16,7 @@ const tabBarIcon =
       <Icon.Icon
         name={name}
         color={!focused ? 'dark.20' : 'primary.500'}
-        size={size}
+        size={size * 0.8}
       />
     );
   };
@@ -43,13 +42,6 @@ const Root: FC = () => {
         component={Home}
         options={{
           tabBarIcon: tabBarIcon(iconsNames.house),
-        }}
-      />
-      <Tabs.Screen
-        name="Schedule"
-        component={Schedule}
-        options={{
-          tabBarIcon: tabBarIcon(iconsNames.clock),
         }}
       />
       <Tabs.Screen

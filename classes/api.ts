@@ -17,17 +17,12 @@ function parseScheduledTaskList(state: InitialState) {
       state.taskListManager,
       id
     );
+
     const { startTime, interval } = taskList;
     let bool = false;
     switch (interval) {
       case ScheduleIntervalType.HOURLY: {
-        const minute = Math.floor(startTime / Times.MINUTE);
-        bool =
-          (time.getTime() - lastTimeRun >= Times.HOUR &&
-            time.getMinutes() - 7.5 < minute &&
-            minute < time.getMinutes() + 7.5) ||
-          ((minute > 52 || minute < 8) &&
-            (time.getMinutes() > 52 || time.getMinutes() < 8));
+        bool = time.getTime() - lastTimeRun >= Times.HOUR;
         break;
       }
       case ScheduleIntervalType.DAILY: {
@@ -137,7 +132,11 @@ export default class API {
       taskList.reports.push(report);
       taskList.lastTimeRun = Date.now();
     }
-    await Promise.all(parsedScheduledTask.map(processTaskList));
+    // eslint-disable-next-line no-restricted-syntax
+    for (const tl of parsedScheduledTask) {
+      // eslint-disable-next-line no-await-in-loop
+      await processTaskList(tl);
+    }
     return state;
   }
 }

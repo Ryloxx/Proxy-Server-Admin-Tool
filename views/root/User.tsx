@@ -1,13 +1,12 @@
 import { Box, Center, Text } from 'native-base';
 import React, { FC, useContext } from 'react';
+import { makeBulletListText } from '../../utils';
 import LabeledData from '../components/LabeledData';
 import Layout from '../components/Layout';
 import { UserContext, UserInfo } from '../providers/UserProvider';
 import { TabsNavigationRouteProps } from '../type';
 import { TabsParamList } from './type';
 
-const noUserLoggedInText = `If you see this message it means you have not provided valid login info,
-go to settings and upate your login info`;
 const UserInfoView: FC<UserInfo> = ({ email, username }) => (
   <LabeledData
     center
@@ -37,7 +36,22 @@ const User: FC<TabsNavigationRouteProps<TabsParamList, 'User'>> = ({
         <Box bg="blue.100" flex={1}>
           <Center>
             <Text color="light.100" fontWeight="semibold">
-              {noUserLoggedInText}
+              If you see this message it means there is a problem connecting the
+              server, check one of those options
+              <Box>
+                {makeBulletListText(
+                  [
+                    'The api url you provided in settings',
+                    'Your login info in settings',
+                    'Your version is up to date',
+                  ],
+                  'bullet'
+                ).map((item) => (
+                  <Text key={item} color="light.100" fontWeight="bold">
+                    {item}
+                  </Text>
+                ))}
+              </Box>
             </Text>
           </Center>
         </Box>
