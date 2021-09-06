@@ -1,3 +1,4 @@
+import { NavigationContainerRef } from '@react-navigation/native';
 import {
   createStackNavigator,
   TransitionPresets,
@@ -5,7 +6,6 @@ import {
 import { Box } from 'native-base';
 import React, { FC } from 'react';
 import Layout from '../../components/Layout';
-
 import { TabsNavigationRouteProps } from '../../type';
 import { TabsParamList } from '../type';
 import ReportListView from './ReportListView';
@@ -17,6 +17,11 @@ import TaskListsView from './TaskListView';
 import TaskMaker from './TaskMaker';
 import { HomeParamList } from './type';
 
+export const HomeNavigationRef = React.createRef<NavigationContainerRef>();
+
+export function navigate(name: string, params: object | undefined) {
+  HomeNavigationRef.current?.navigate(name, params);
+}
 const HomeStack = createStackNavigator<HomeParamList>();
 
 const Home: FC<TabsNavigationRouteProps<TabsParamList, 'Home'>> = () => (

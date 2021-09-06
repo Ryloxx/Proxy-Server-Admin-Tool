@@ -79,6 +79,7 @@ const Settings: FC<
       <Box>
         <Button
           isLoading={loading}
+          isLoadingText="Updating"
           onPress={() => {
             openModal('update');
           }}

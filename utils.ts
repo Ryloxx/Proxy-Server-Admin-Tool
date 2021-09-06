@@ -39,7 +39,7 @@ export function timeToDate(time: number, precise = false) {
 
 export async function registerBackgroundFetchAsync(type: string) {
   return registerTaskAsync(type, {
-    minimumInterval: 60, // 15 minutes
+    minimumInterval: 60,
     stopOnTerminate: false, // android only,
     startOnBoot: true, // android only
   });
@@ -50,4 +50,12 @@ export function makeBulletListText(list: string[], type: 'bullet' = 'bullet') {
     bullet: '\u2022',
   };
   return list.map((item) => `${typeMap[type]} ${item}`);
+}
+
+export function isObjectEmpty(obj: object) {
+  // eslint-disable-next-line no-restricted-syntax
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) return false;
+  }
+  return true;
 }

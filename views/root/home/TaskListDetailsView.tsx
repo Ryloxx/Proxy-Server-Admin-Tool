@@ -1,19 +1,19 @@
-import React, { FC, useContext } from 'react';
 import { Box, Button, Divider, VStack } from 'native-base';
+import React, { FC, useCallback, useContext } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import ReportManager from '../../../classes/report';
+import { ScheduleIntervalType } from '../../../classes/taskListManager';
+import { actions, selectors } from '../../../store/stateReducer';
+import { actions as uiActions } from '../../../store/uiReducer';
+import { getUniqueId, timeToDate } from '../../../utils';
+import Icon from '../../components/Icon';
 import List from '../../components/List';
+import ListItem from '../../components/ListItem';
+import TextType from '../../components/TextType';
+import iconsNames from '../../iconsNames';
+import { ApiContext } from '../../providers/ApiProvider';
 import { StackNavigationRouteProps } from '../../type';
 import { HomeParamList } from './type';
-import { ApiContext } from '../../providers/ApiProvider';
-import { actions, selectors } from '../../../store/stateReducer';
-import { useRequest } from '../../hooks';
-import ListItem from '../../components/ListItem';
-import iconsNames from '../../iconsNames';
-import Error from '../../components/Error';
-import { timeToDate } from '../../../utils';
-import Icon from '../../components/Icon';
-import { ScheduleIntervalType } from '../../../classes/taskListManager';
-import TextType from '../../components/TextType';
 
 const TaskListDetailsView: FC<
   StackNavigationRouteProps<HomeParamList, 'Details'>
@@ -24,13 +24,53 @@ const TaskListDetailsView: FC<
   const api = useContext(ApiContext);
   const taskList = useSelector(selectors.selectTaskList(id));
   const dispatch = useDispatch();
-  const {
-    loading,
-    error,
-    send: run,
-  } = useRequest(
-    () => api.runTaskList(taskList),
-    (result) => {
+  const handleTaskRunStart = useCallback(
+    async (key) => {
+      dispatch(
+        uiActions.updateTopDrawerEntry({
+          key,
+          title: 'Starting Task',
+          working: false,
+          subTitle: id,
+        })
+      );
+      const result = await api.runTaskList(
+        taskList,
+        (k, currentTask, report, done) => {
+          dispatch(
+            uiActions.updateTopDrawerEntry({
+              key,
+              title: currentTask,
+              working: true,
+              subTitle: id,
+              icon: done ? iconsNames.checkMarkCircle : undefined,
+              onClick: () => {
+                navigation.navigate('Report', {
+                  reportData: { ...report },
+                });
+              },
+              progress: ReportManager.getTotalProgress(report) * 100,
+            })
+          );
+        }
+      );
+      return result;
+    },
+    [api, dispatch, id, navigation, taskList]
+  );
+
+  const handleTaskRunFinish = useCallback(
+    (key, result) => {
+      dispatch(
+        uiActions.updateTopDrawerEntry({
+          key,
+          title: 'Done',
+          working: false,
+          subTitle: id,
+          icon: iconsNames.checkMarkCircle,
+          progress: undefined,
+        })
+      );
       dispatch(
         actions.setTaskList({
           ...taskList,
@@ -38,11 +78,36 @@ const TaskListDetailsView: FC<
           reports: taskList.reports.concat([result]),
         })
       );
-      navigation.navigate('Report', {
-        reportData: result,
-      });
-    }
+    },
+    [dispatch, id, taskList]
   );
+
+  const handleTaskRunError = useCallback(
+    (key, error) => {
+      dispatch(
+        uiActions.updateTopDrawerEntry({
+          key,
+          title: 'Error',
+          working: false,
+          subTitle: `${id}\n- ${error}`,
+          icon: iconsNames.crossError,
+          progress: undefined,
+        })
+      );
+    },
+    [dispatch, id]
+  );
+
+  const handleTaskRun = async () => {
+    const key = getUniqueId();
+    try {
+      const result = await handleTaskRunStart(key);
+      handleTaskRunFinish(key, result);
+    } catch (err: any) {
+      handleTaskRunError(key, err.message);
+    }
+  };
+
   return (
     <VStack flex={1}>
       <Box flex={1}>
@@ -78,7 +143,6 @@ const TaskListDetailsView: FC<
           )}
         />
       </Box>
-      <Error.ErrorText>{error}</Error.ErrorText>
       <Button.Group direction="column" justifyContent="center">
         <Button.Group>
           <Button
@@ -102,14 +166,7 @@ const TaskListDetailsView: FC<
             Report List
           </Button>
         </Button.Group>
-        <Button
-          isLoading={loading}
-          onPress={() => {
-            run();
-          }}
-        >
-          Run
-        </Button>
+        <Button onPress={handleTaskRun}>Run</Button>
       </Button.Group>
       <Divider />
       <Button.Group alignItems="center" minH={20}>

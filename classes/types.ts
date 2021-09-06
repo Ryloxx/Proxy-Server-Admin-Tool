@@ -28,9 +28,26 @@ export interface SettingsFields {
   password: string;
 }
 
+export enum TaskStatus {
+  SUCCESS = 0,
+  FAILED = 1,
+  PENDING = 2,
+  SKIPPED = 3,
+}
+
+export type ClientRequestError = {
+  error: string;
+};
 export type ClientTasklistRunRequestBody = {
   taskList: string[][];
   stopOnError: boolean;
+};
+
+export type ClientTasklistRunRequestResponse = {
+  current: string;
+  done: boolean;
+  status: Record<string, { status: TaskStatus }>;
+  message: string[];
 };
 
 export type ServerTaskRunResponse = number;

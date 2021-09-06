@@ -230,12 +230,7 @@ const LayoutTabDefault: <T extends ParamListBase, S extends keyof T>(
   const { height } = useWindowDimensions();
 
   return (
-    <ScrollView
-      contentContainerStyle={{}}
-      bg={mat ? bgColor : undefined}
-      px={2}
-      pb={2}
-    >
+    <ScrollView bg={mat ? bgColor : undefined} px={2} pb={2}>
       <VStack minHeight={height}>
         <HStack
           alignContent="center"

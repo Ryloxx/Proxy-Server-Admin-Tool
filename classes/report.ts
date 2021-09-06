@@ -1,9 +1,12 @@
 /* eslint-disable no-param-reassign */
 import metaData, { MetaData } from './metaData';
+import { TaskStatus } from './types';
 
 type ReportResponse = {
   success: string[];
   failed: string[];
+  pending: string[];
+  skipped: string[];
   message: string[];
 };
 export interface Report extends MetaData {
@@ -11,48 +14,54 @@ export interface Report extends MetaData {
 }
 
 export type ServerReportResponse = {
-  status: 'running' | 'done';
-  report?: ReportResponse;
+  status: Record<string, { status: TaskStatus }>;
+  message: string[];
 };
 
 export default (() => {
-  function formatRunning(response: ServerReportResponse) {
-    return { success: [], failed: [], message: [`Status: ${response.status}`] };
-  }
-  function formatFinished(response: ReportResponse | undefined) {
+  function format(response: ServerReportResponse): ReportResponse {
     const result: ReportResponse = {
-      success: [],
       failed: [],
-      message: [`No report generated from the server`],
+      success: [],
+      pending: [],
+      skipped: [],
+      message: response.message,
     };
-    if (!response) return result;
-    const comparator = (a: string, b: string) => {
-      if (a < b) return -1;
-      if (a > b) return 1;
-      return 0;
+    const m: Record<TaskStatus, keyof typeof result> = {
+      [TaskStatus.FAILED]: 'failed',
+      [TaskStatus.PENDING]: 'pending',
+      [TaskStatus.SKIPPED]: 'skipped',
+      [TaskStatus.SUCCESS]: 'success',
     };
-    const process = (arr: string[]) =>
-      arr.sort(comparator).map((line) => line.replace('>', ' > '));
-    result.success = process(response.success);
-    result.failed = process(response.failed);
-    result.message = response.message;
+    Object.entries(response.status).forEach(([name, { status }]) => {
+      result[m[status]].push(name);
+    });
     return result;
-  }
-  function format(response: ServerReportResponse) {
-    return response.status === 'running'
-      ? formatRunning(response)
-      : formatFinished(response.report);
   }
   return {
     makeReport(): Report {
       return {
         ...metaData.makeMetaData('Report'),
-        result: { success: [], failed: [], message: [] },
+        result: {
+          success: [],
+          failed: [],
+          pending: [],
+          skipped: [],
+          message: [],
+        },
       };
     },
 
     update(report: Report, response: ServerReportResponse) {
       report.result = format(response);
+    },
+    getTotalProgress(report: Report) {
+      const total =
+        report.result.failed.length +
+        report.result.pending.length +
+        report.result.skipped.length +
+        report.result.success.length;
+      return total - report.result.pending.length;
     },
   };
 })();

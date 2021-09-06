@@ -10,12 +10,11 @@ export type InitialState = {
 export function getInitialState(): InitialState {
   return {
     settings: {
-      // apiUrl: 'http://10.0.2.2:1337',
-      apiUrl: 'http://10.250.1.136:1337',
+      apiUrl: '',
       adminEndpoint: '/admin',
       versionEndpoint: '/',
       stopTaskListOnError: false,
-      version: '1.1',
+      version: '',
       username: '',
       password: '',
     },
@@ -29,9 +28,7 @@ const appState = (async () => {
     state: InitialState,
     initiator: string
   ) => void | Promise<void>)[] = [];
-  let state: InitialState = await //   Promise.reject()
-
-  storage
+  let state: InitialState = await storage
     .getItem(StorageKeyEntry.STATE)
     .then((result) => (result ? JSON.parse(result) : Promise.reject()))
     .catch(() => getInitialState());

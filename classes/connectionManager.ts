@@ -1,4 +1,5 @@
-import { VersionResponse } from './types';
+import { isObjectEmpty } from '../utils';
+import { VersionResponse, ClientRequestError } from './types';
 
 export default class ConnectionManager {
   readonly apiUrl: string;
@@ -13,7 +14,11 @@ export default class ConnectionManager {
 
   version = '';
 
-  readonly init: Promise<void>;
+  init: Promise<void>;
+
+  static readonly TIMEOUT = 1000 * 10; // 10 seconds;
+
+  static POLL_TIMEOUT = 3000;
 
   constructor(
     apiUrl: string,
@@ -39,6 +44,16 @@ export default class ConnectionManager {
     });
   }
 
+  private static getTimeout(init = true, timeout = ConnectionManager.TIMEOUT) {
+    const abroter = new AbortController();
+    if (init) {
+      setTimeout(() => {
+        abroter.abort();
+      }, timeout);
+    }
+    return abroter;
+  }
+
   async send<T>(endpoint: string, body: Record<string, unknown>): Promise<T> {
     await this.init;
     return fetch(this.makeUrl(endpoint), {
@@ -49,6 +64,7 @@ export default class ConnectionManager {
         'Content-Type': 'application/json',
         Origin: 'https://localhost:3210',
       },
+      signal: ConnectionManager.getTimeout().signal,
       body: JSON.stringify(body),
     }).then(ConnectionManager.handleResponse);
   }
@@ -77,6 +93,7 @@ export default class ConnectionManager {
         Accept: 'application/json',
         Origin: 'https://localhost:3210',
       },
+      signal: ConnectionManager.getTimeout().signal,
     }).then(ConnectionManager.handleResponse);
   }
 
@@ -96,15 +113,50 @@ export default class ConnectionManager {
   }
 
   static async getServerVersion(versionUrl: string) {
-    const { version }: VersionResponse = await fetch(versionUrl, {
-      method: 'GET',
-      headers: { Origin: 'https://localhost:3210' },
-    }).then(ConnectionManager.handleResponse);
+    try {
+      const { version }: VersionResponse = await fetch(versionUrl, {
+        method: 'GET',
+        headers: { Origin: 'https://localhost:3210' },
+        signal: ConnectionManager.getTimeout().signal,
+      }).then(ConnectionManager.handleResponse);
 
-    return version;
+      return version;
+    } catch (err) {
+      throw new Error(
+        'Unable to reach the server, are you sure you properly configured the api url?'
+      );
+    }
   }
 
   public async connect() {
     await this.checkVersion();
+  }
+
+  public poll<T extends object>(
+    url: string,
+    onPoll: (data: T) => boolean,
+    pollInterval: number = ConnectionManager.POLL_TIMEOUT
+  ) {
+    return new Promise<void>((resolve, reject) => {
+      const updt = async () => {
+        try {
+          const data = await this.get<T | ClientRequestError>(url);
+          let keepPolling = true;
+          if (!isObjectEmpty(data)) {
+            if ('error' in data) throw new Error(data.error);
+            const noErrorData = data as T;
+            keepPolling = onPoll(noErrorData);
+          }
+          if (keepPolling) {
+            setTimeout(updt, pollInterval);
+          } else {
+            resolve();
+          }
+        } catch (err) {
+          reject(err);
+        }
+      };
+      updt();
+    });
   }
 }

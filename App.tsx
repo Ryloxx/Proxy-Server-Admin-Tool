@@ -6,6 +6,7 @@ import store from './store';
 import Root from './views/root';
 import ApiProvider from './views/providers/ApiProvider';
 import UserProvider from './views/providers/UserProvider';
+import { HomeNavigationRef } from './views/root/home';
 
 const def = require('react-native-linear-gradient').default;
 
@@ -130,7 +131,7 @@ const App = () => {
       >
         <ApiProvider>
           <UserProvider>
-            <NavigationContainer>
+            <NavigationContainer ref={HomeNavigationRef}>
               <Root />
             </NavigationContainer>
           </UserProvider>

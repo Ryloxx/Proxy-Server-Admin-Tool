@@ -33,7 +33,7 @@ export const useRequest: <T>(
         ? request(...args)
         : Promise.reject(new Error('Invalid request'))
       )
-        .then((result) => callback && isMounted() && callback(result))
+        .then((result) => callback && callback(result))
         .catch((err) => isMounted() && setError(err.message))
         .finally(() => isMounted() && setLoading(false));
     },

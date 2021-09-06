@@ -1,9 +1,11 @@
-import { TaskList } from './taskList';
-import { wait } from '../utils';
 import ConnectionManager from './connectionManager';
+import type { Report as ReportType } from './report';
 import ReportHandler from './report';
-import type { Report as ReportType, ServerReportResponse } from './report';
-import { ClientTasklistRunRequestBody, ServerTaskRunResponse } from './types';
+import { TaskList } from './taskList';
+import {
+  ClientTasklistRunRequestBody,
+  ClientTasklistRunRequestResponse,
+} from './types';
 
 export default class TaskRunner {
   static POLL_TIMEOUT = 3000;
@@ -21,7 +23,12 @@ export default class TaskRunner {
       onProgress,
     }: {
       stopOnError: boolean;
-      onProgress?: (report: ReportType) => void;
+      onProgress?: (
+        key: string,
+        currentTask: string,
+        report: ReportType,
+        done: boolean
+      ) => void;
     }
   ) {
     const parsedTasksList = taskList.tasks.map((task) => task.typeId.split(''));
@@ -29,27 +36,19 @@ export default class TaskRunner {
       stopOnError,
       taskList: parsedTasksList,
     };
-    const progressId = await this.connection.send<ServerTaskRunResponse>(
-      '/tasks/run',
-      body
-    );
-    const poll = () =>
-      this.connection.get<ServerReportResponse>(
-        `/tasks/progress/${progressId}`
-      );
-    let progress = await poll();
+    const key = await this.connection.send<string>('/tasks/run', body);
     const report = ReportHandler.makeReport();
-    ReportHandler.update(report, progress);
-    /* eslint-disable no-await-in-loop */
-    while (progress.status === 'running') {
-      await wait(TaskRunner.POLL_TIMEOUT);
-      progress = await poll();
-      ReportHandler.update(report, progress);
-      if (onProgress) {
-        onProgress(report);
+    await this.connection.poll<ClientTasklistRunRequestResponse>(
+      `/tasks/progress/${key}`,
+      (progress) => {
+        ReportHandler.update(report, progress);
+        if (typeof onProgress === 'function') {
+          onProgress(key, progress.current, report, progress.done);
+        }
+        return !progress.done;
       }
-    }
-    /* eslint-enable no-await-in-loop */
+    );
+
     return report;
   }
 }

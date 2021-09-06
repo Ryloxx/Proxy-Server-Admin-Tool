@@ -12,4 +12,13 @@ export default {
   chevronRight: 'chevron-right',
   burgerButton: 'bars',
   close: 'times-circle',
+  checkMarkCircle: 'check-circle',
+  checkMarkSquare: 'check-square',
+  arrowDown: 'angle-down',
+  arrowCircleDown: 'chevron-circle-down',
+  arrowCircleUp: 'chevron-circle-up',
+  external: 'external-link-alt',
+  crossError: 'times-circle',
+  hourglass: 'hourglass-half',
+  skippArrows: 'angle-double-right',
 };

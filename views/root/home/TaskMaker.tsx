@@ -56,7 +56,7 @@ const TaskMaker: FC<StackNavigationRouteProps<HomeParamList, 'Task Maker'>> = ({
               actions.addTaskToTaskList({
                 taskListId: id,
                 typeId,
-                typeMap,
+                typeMap: { ...typeMap },
               })
             );
             navigation.navigate('Details', { id });

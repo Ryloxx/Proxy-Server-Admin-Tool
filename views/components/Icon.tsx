@@ -29,7 +29,7 @@ const IconButton: FC<IconButtonProps> = ({
 }) => (
   <Circle
     overflow="hidden"
-    m={2}
+    m={1}
     width={size * wrapperSizeMultiplier}
     height={size * wrapperSizeMultiplier}
   >

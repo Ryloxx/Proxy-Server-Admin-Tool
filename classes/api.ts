@@ -1,10 +1,11 @@
 import { EventRegister } from 'react-native-event-listeners';
 import { InitialState } from '.';
 import ConnectionManager from './connectionManager';
-import TaskRunner from './taskRunner';
+import { Report } from './report';
 import { TaskList } from './taskList';
-import { SettingsFields, TaskMapServerResponse, Times } from './types';
 import taskListManager, { ScheduleIntervalType } from './taskListManager';
+import TaskRunner from './taskRunner';
+import { SettingsFields, TaskMapServerResponse, Times } from './types';
 
 function parseScheduledTaskList(state: InitialState) {
   const scheduledTaskList = taskListManager.getTaskListScheduleInfoList(
@@ -18,7 +19,7 @@ function parseScheduledTaskList(state: InitialState) {
       id
     );
 
-    const { startTime, interval } = taskList;
+    const { interval } = taskList;
     let bool = false;
     switch (interval) {
       case ScheduleIntervalType.HOURLY: {
@@ -26,15 +27,11 @@ function parseScheduledTaskList(state: InitialState) {
         break;
       }
       case ScheduleIntervalType.DAILY: {
-        const hour = Math.floor(startTime / Times.HOUR);
-        bool =
-          time.getTime() - lastTimeRun >= Times.DAY && hour === time.getHours();
+        bool = time.getTime() - lastTimeRun >= Times.DAY;
         break;
       }
       case ScheduleIntervalType.MONTHLY: {
-        const day = Math.floor(startTime / Times.DAY);
-        bool =
-          time.getTime() - lastTimeRun >= Times.MONTH && day === time.getDay();
+        bool = time.getTime() - lastTimeRun >= Times.MONTH;
         break;
       }
       default:
@@ -51,17 +48,28 @@ export default class API {
 
   settings;
 
-  init: Promise<void>;
+  initialized: Promise<void> = Promise.resolve();
 
   constructor(settings: SettingsFields) {
     this.settings = settings;
     const { connection } = API.init(settings);
     this.connectionManager = connection;
-    this.init = this.connectionManager.init;
+    this.initialized = this.connectionManager.init;
+  }
+
+  init() {
+    return this.initialized.catch(() => this.initialize());
+  }
+
+  initialize() {
+    const { connection } = API.init(this.settings);
+    this.connectionManager = connection;
+    this.initialized = this.connectionManager.init;
+    return this.initialized;
   }
 
   async login() {
-    await this.init;
+    await this.init();
     await this.connectionManager.login();
     const user = await this.getUserData();
     EventRegister.emit('userchange', user);
@@ -73,27 +81,35 @@ export default class API {
     creds: string;
     email: string;
   }) {
-    await this.init;
+    await this.init();
     await this.connectionManager.send('/signup', signupInfo);
   }
 
   async getUserData(): Promise<{ username: string; email: string }> {
-    await this.init;
+    await this.init();
     return this.connectionManager.get('/user');
   }
 
-  async runTaskList(taskList: TaskList) {
-    await this.init;
+  async runTaskList(
+    taskList: TaskList,
+    onProgress?: (
+      key: string,
+      currentTask: string,
+      report: Report,
+      done: boolean
+    ) => void
+  ) {
+    await this.init();
     const runner = new TaskRunner(this.connectionManager);
     const report = await runner.run(taskList, {
-      onProgress: () => {},
+      onProgress,
       stopOnError: this.settings.stopTaskListOnError,
     });
     return report;
   }
 
   async getTaskTypeMap() {
-    await this.init;
+    await this.init();
     await this.connectionManager.login();
     return this.connectionManager.get<TaskMapServerResponse>('/tasks');
   }
@@ -114,14 +130,7 @@ export default class API {
 
   static async executeScheduledTask(state: InitialState) {
     const parsedScheduledTask = parseScheduledTaskList(state);
-    if (!parsedScheduledTask.length) {
-      return state;
-    }
-    const { connection } = API.init(state.settings);
-    await connection.init;
-    await connection.login();
-    const runner = new TaskRunner(connection);
-    async function processTaskList(taskListId: string) {
+    async function processTaskList(taskListId: string, runner: TaskRunner) {
       const taskList = taskListManager.getTaskList(
         state.taskListManager,
         taskListId
@@ -132,10 +141,16 @@ export default class API {
       taskList.reports.push(report);
       taskList.lastTimeRun = Date.now();
     }
-    // eslint-disable-next-line no-restricted-syntax
-    for (const tl of parsedScheduledTask) {
-      // eslint-disable-next-line no-await-in-loop
-      await processTaskList(tl);
+    if (parsedScheduledTask.length) {
+      const { connection } = API.init(state.settings);
+      await connection.init;
+      await connection.login();
+      const runner = new TaskRunner(connection);
+      // eslint-disable-next-line no-restricted-syntax
+      for (const tl of parsedScheduledTask) {
+        // eslint-disable-next-line no-await-in-loop
+        await processTaskList(tl, runner);
+      }
     }
     return state;
   }

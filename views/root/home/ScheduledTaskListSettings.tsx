@@ -7,6 +7,7 @@ import { actions, selectors } from '../../../store/stateReducer';
 import { StackNavigationRouteProps } from '../../type';
 import { HomeParamList } from './type';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const StartTimePicker: FC<{
   selectedValue: number;
   range: ScheduleIntervalType;
@@ -103,7 +104,7 @@ const ScheduledTaskListSettings: FC<
           value={ScheduleIntervalType.MONTHLY}
         />
       </Picker>
-      {result.interval !== ScheduleIntervalType.HOURLY && (
+      {/* {result.interval !== ScheduleIntervalType.HOURLY && (
         <>
           <Text textAlign="center" fontSize="xl" fontWeight="semibold">
             Run at
@@ -117,7 +118,7 @@ const ScheduledTaskListSettings: FC<
             }}
           />
         </>
-      )}
+      )} */}
       <Box flex={1} />
       <Button
         onPress={() => {
